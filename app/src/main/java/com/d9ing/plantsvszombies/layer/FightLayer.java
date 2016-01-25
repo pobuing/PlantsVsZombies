@@ -4,22 +4,24 @@ import android.view.MotionEvent;
 
 import com.d9ing.plantsvszombies.base.BaseLayer;
 import com.d9ing.plantsvszombies.bean.ShowZombies;
+import com.d9ing.plantsvszombies.engine.GameCortoller;
 import com.d9ing.plantsvszombies.utils.CommonUtils;
 
+import org.cocos2d.actions.base.CCAction;
 import org.cocos2d.actions.instant.CCCallFunc;
+import org.cocos2d.actions.interval.CCAnimate;
 import org.cocos2d.actions.interval.CCDelayTime;
 import org.cocos2d.actions.interval.CCMoveBy;
 import org.cocos2d.actions.interval.CCMoveTo;
 import org.cocos2d.actions.interval.CCSequence;
-import org.cocos2d.layers.CCTMXObjectGroup;
 import org.cocos2d.layers.CCTMXTiledMap;
+import org.cocos2d.nodes.CCDirector;
 import org.cocos2d.nodes.CCSprite;
 import org.cocos2d.types.CGPoint;
 import org.cocos2d.types.CGRect;
 import org.cocos2d.types.CGSize;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
@@ -37,6 +39,8 @@ public class FightLayer extends BaseLayer {
     private boolean isLock;
     //反选植物是否删除标识
     private boolean isDel;
+    private CCSprite start;
+    private CCSprite readySprite;
 
     public FightLayer() {
         init();
@@ -102,16 +106,22 @@ public class FightLayer extends BaseLayer {
     }
 
     /**
-     * 加载选择容器
+     * 加载界面中的容器
      */
     public void loadContainer() {
         //创建已经选择的容器
         choosed = CCSprite.sprite("image/fight/chose/fight_chose.png");
         //创建可选择植物的容器元素
         choose = CCSprite.sprite("image/fight/chose/fight_choose.png");
+        //确认按钮
+        start = CCSprite.sprite("image/fight/chose/fight_start.png");
+        //设置按钮位置
+        start.setPosition(choose.getContentSize().width / 2, 30);
         choose.setAnchorPoint(0, 0);
+        //------>
         this.addChild(choosed);
         this.addChild(choose);
+        this.addChild(start);
         //设置已选择的到左上角
         choosed.setAnchorPoint(0, 1f);
         choosed.setPosition(0, winSize.height);
@@ -180,7 +190,10 @@ public class FightLayer extends BaseLayer {
         }
         //选择植物逻辑
         else if (CGRect.containsPoint(box, point)) {
-            if (selectPlants.size() < 5&&!isLock) {
+            //确认按钮点击
+            if (CGRect.containsPoint(start.getBoundingBox(), point)) {
+                ready();
+            } else if (selectPlants.size() < 5 && !isLock) {
 
                 //遍历集合
                 for (ShowPlant plant : showPlants
@@ -199,13 +212,59 @@ public class FightLayer extends BaseLayer {
                 }
             }
         }
+
         return super.ccTouchesBegan(event);
+    }
+
+    /**
+     * 准备就绪
+     */
+    private void ready() {
+        choose.setScale(0.65f);
+        //把已经选中的植物重新添加一次
+        for (ShowPlant plant : selectPlants) {
+            CCSprite showSprite = plant.getShowSprite();
+            showSprite.setScale(0.65f);
+            showSprite.setPosition(showSprite.getPosition().x * 0.65f, showSprite.getPosition().y + (CCDirector.sharedDirector().getWinSize().height - showSprite.getPosition().y) * 0.35f);
+            this.addChild(showSprite);
+        }
+        //回收植物选择容器
+        choose.removeSelf();
+        start.removeSelf();
+        //缩小已经选择的容器
+        choosed.setScale(0.65f);
+        int x = (int) (map.getContentSize().width - winSize.width);
+        CCMoveBy moveBy = CCMoveBy.action(2, ccp(x, 0));
+        CCSequence sequence = CCSequence.actions(moveBy, CCCallFunc.action(this, "preGame"));
+        map.runAction(sequence);
+    }
+
+    /**
+     * 游戏开始前准备动作
+     */
+    public void preGame() {
+        readySprite = CCSprite.sprite("image/fight/startready_02.png");
+        readySprite.setPosition(winSize.width / 2, winSize.height / 2);
+        this.addChild(readySprite);
+        //播放帧序列
+        String format = "image/fight/startready_%02d.png";
+        CCAction animate = CommonUtils.getAnimate(format, 3, false);
+        //串行动作
+        CCSequence sequence = CCSequence.actions(((CCAnimate) animate),CCDelayTime.action(1), CCCallFunc.action(this, "startGame"));
+        readySprite.runAction(sequence);
+    }
+
+    public void startGame() {
+        //移除中间字的序列帧
+        readySprite.removeSelf();
+        GameCortoller cortoller = GameCortoller.getInstance();
+        cortoller.startGame(map,selectPlants);
     }
 
     /**
      * 控制解锁
      */
-    public void unlock(){
+    public void unlock() {
         isLock = false;
     }
 }

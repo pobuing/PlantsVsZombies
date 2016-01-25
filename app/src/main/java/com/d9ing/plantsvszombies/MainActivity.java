@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 
+import com.d9ing.plantsvszombies.layer.FightLayer;
 import com.d9ing.plantsvszombies.layer.WelComeLayer;
 
 import org.cocos2d.layers.CCScene;
@@ -50,7 +51,7 @@ public class MainActivity extends Activity {
         //创建场景
         CCScene scene = CCScene.node();
         //场景添加图层
-        scene.addChild(new WelComeLayer());
+        scene.addChild(new FightLayer());
         //运行图层
         ccDirector.runWithScene(scene);
 
