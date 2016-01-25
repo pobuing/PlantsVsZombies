@@ -8,6 +8,7 @@ import android.view.MotionEvent;
 import com.d9ing.plantsvszombies.base.BaseLayer;
 import com.d9ing.plantsvszombies.utils.CommonUtils;
 
+import org.cocos2d.actions.base.CCAction;
 import org.cocos2d.actions.instant.CCCallFunc;
 import org.cocos2d.actions.instant.CCHide;
 import org.cocos2d.actions.interval.CCAnimate;
@@ -144,17 +145,18 @@ public class WelComeLayer extends BaseLayer {
         //设置loading位置
         loading.setPosition(winSize.width / 2, 30);
         this.addChild(loading);
-        /*播放序列帧*/
-        ArrayList<CCSpriteFrame> frames = new ArrayList<CCSpriteFrame>();
-        String format = "image/loading/loading_%02d.png";
-        for (int i = 1; i <= 9; i++) {
-            CCSpriteFrame ccSpriteFrame = CCSprite.sprite(String.format(format, i)).displayedFrame();
-            frames.add(ccSpriteFrame);
-        }
-        //1.名称 2 播放时间 3 帧集合
-        CCAnimation animation = CCAnimation.animation("", 0.2f, frames);
+//        /*播放序列帧*/
+//        ArrayList<CCSpriteFrame> frames = new ArrayList<CCSpriteFrame>();
+//        for (int i = 1; i <= 9; i++) {
+//            CCSpriteFrame ccSpriteFrame = CCSprite.sprite(String.format(format, i)).displayedFrame();
+//            frames.add(ccSpriteFrame);
+//        }
+//        //1.名称 2 播放时间 3 帧集合
+//        CCAnimation animation = CCAnimation.animation("", 0.2f, frames);
         //不要永不停止循环播放，指定第二个参数为false
-        CCAnimate animate = CCAnimate.action(animation, false);
+//        CCAnimate animate = CCAnimate.action(animation, false);
+        String format = "image/loading/loading_%02d.png";
+        CCAction animate = CommonUtils.getAnimate(format, 9, false);
         loading.runAction(animate);
         //开始游戏按钮
         start = CCSprite.sprite("image/loading/loading_start.png");
